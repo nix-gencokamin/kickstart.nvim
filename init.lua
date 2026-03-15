@@ -530,16 +530,16 @@ require('lazy').setup({
           },
           root_dir = function(fname) return vim.fn.getcwd() end,
         },
-        -- clangd = {},
-        -- gopls = {},
-        -- pyright = {},
-        -- rust_analyzer = {},
-        --
-        -- Some languages (like typescript) have entire language plugins that can be useful:
-        --    https://github.com/pmizio/typescript-tools.nvim
-        --
-        -- But for many setups, the LSP (`ts_ls`) will work just fine
-        -- ts_ls = {},
+        ts_ls = {},
+        yamlls = {
+          settings = {
+            yaml = {
+              schemaStore = { enable = true },
+              validate = true,
+            },
+          },
+        },
+        lemminx = {},
       }
 
       -- Ensure the servers and tools above are installed
@@ -551,14 +551,17 @@ require('lazy').setup({
       -- You can press `g?` for help in this menu.
       local ensure_installed = vim.tbl_keys(servers or {})
       -- Remove ruby_lsp since we're using a custom installation
-      ensure_installed = vim.tbl_filter(function(name) return name ~= 'ruby_lsp' and name ~= 'jsonls' end, ensure_installed)
+      -- Filter servers whose Mason package names differ from lspconfig names
+      local mason_name_overrides = { ruby_lsp = true, jsonls = true, ts_ls = true, yamlls = true }
+      ensure_installed = vim.tbl_filter(function(name) return not mason_name_overrides[name] end, ensure_installed)
 
       vim.list_extend(ensure_installed, {
         'jdtls', -- Java language server (configured via nvim-jdtls, not lspconfig)
         'json-lsp', -- JSON language server (jsonls in lspconfig)
-        'lua-language-server', -- Lua Language server
+        'typescript-language-server', -- TypeScript/JavaScript (ts_ls in lspconfig)
+        'yaml-language-server', -- YAML (yamlls in lspconfig)
+        'lua-language-server', -- Lua language server
         'stylua',
-        -- You can add other tools here that you want Mason to install
       })
 
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
@@ -811,7 +814,7 @@ require('lazy').setup({
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     config = function()
-      local filetypes = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
+      local filetypes = { 'bash', 'c', 'css', 'diff', 'html', 'java', 'javascript', 'json', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'tsx', 'typescript', 'vim', 'vimdoc', 'xml', 'yaml' }
       require('nvim-treesitter').install(filetypes)
       vim.api.nvim_create_autocmd('FileType', {
         pattern = filetypes,
