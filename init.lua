@@ -554,6 +554,7 @@ require('lazy').setup({
       ensure_installed = vim.tbl_filter(function(name) return name ~= 'ruby_lsp' and name ~= 'jsonls' end, ensure_installed)
 
       vim.list_extend(ensure_installed, {
+        'jdtls', -- Java language server (configured via nvim-jdtls, not lspconfig)
         'json-lsp', -- JSON language server (jsonls in lspconfig)
         'lua-language-server', -- Lua Language server
         'stylua',
