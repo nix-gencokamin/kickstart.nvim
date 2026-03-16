@@ -164,6 +164,9 @@ vim.o.scrolloff = 10
 -- See `:help 'confirm'`
 vim.o.confirm = true
 
+-- Automatically reload files changed outside of Neovim
+vim.o.autoread = true
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -228,6 +231,12 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking (copying) text',
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
   callback = function() vim.hl.on_yank() end,
+})
+
+vim.api.nvim_create_autocmd({ 'FocusGained', 'BufEnter', 'CursorHold' }, {
+  desc = 'Reload file if changed outside of Neovim',
+  group = vim.api.nvim_create_augroup('autoread-checktime', { clear = true }),
+  command = 'checktime',
 })
 
 -- [[ Install `lazy.nvim` plugin manager ]]
@@ -322,8 +331,8 @@ require('lazy').setup({
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
     config = function()
-      local fzf = require('fzf-lua')
-      fzf.setup({
+      local fzf = require 'fzf-lua'
+      fzf.setup {
         'default-title',
         fzf_opts = {
           ['--layout'] = 'reverse',
@@ -338,7 +347,7 @@ require('lazy').setup({
             layout = 'horizontal',
           },
         },
-      })
+      }
 
       -- Register as the UI select handler (replaces telescope-ui-select)
       fzf.register_ui_select()
@@ -381,9 +390,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>/', fzf.blines, { desc = '[/] Fuzzily search in current buffer' })
 
       -- Live grep in open files
-      vim.keymap.set('n', '<leader>s/', function()
-        fzf.live_grep { grep_open_files = true }
-      end, { desc = '[S]earch [/] in Open Files' })
+      vim.keymap.set('n', '<leader>s/', function() fzf.live_grep { grep_open_files = true } end, { desc = '[S]earch [/] in Open Files' })
 
       -- Search Neovim configuration files
       vim.keymap.set('n', '<leader>sn', function() fzf.files { cwd = vim.fn.stdpath 'config' } end, { desc = '[S]earch [N]eovim files' })
@@ -814,13 +821,31 @@ require('lazy').setup({
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     config = function()
-      local filetypes = { 'bash', 'c', 'css', 'diff', 'html', 'java', 'javascript', 'json', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'tsx', 'typescript', 'vim', 'vimdoc', 'xml', 'yaml' }
+      local filetypes = {
+        'bash',
+        'c',
+        'css',
+        'diff',
+        'html',
+        'java',
+        'javascript',
+        'json',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'query',
+        'tsx',
+        'typescript',
+        'vim',
+        'vimdoc',
+        'xml',
+        'yaml',
+      }
       require('nvim-treesitter').install(filetypes)
       vim.api.nvim_create_autocmd('FileType', {
         pattern = filetypes,
-        callback = function()
-          pcall(vim.treesitter.start)
-        end,
+        callback = function() pcall(vim.treesitter.start) end,
       })
     end,
   },
