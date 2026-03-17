@@ -394,6 +394,14 @@ require('lazy').setup({
 
       -- Search Neovim configuration files
       vim.keymap.set('n', '<leader>sn', function() fzf.files { cwd = vim.fn.stdpath 'config' } end, { desc = '[S]earch [N]eovim files' })
+
+      -- Set filetype
+      vim.keymap.set('n', '<leader>ft', function()
+        local filetypes = { 'bash', 'java', 'javascript', 'json', 'lua', 'markdown', 'python', 'ruby', 'sql', 'typescript', 'typescriptreact', 'yaml' }
+        vim.ui.select(filetypes, { prompt = 'Set filetype' }, function(choice)
+          if choice then vim.bo.filetype = choice end
+        end)
+      end, { desc = '[F]ile[T]ype set' })
     end,
   },
 
@@ -472,6 +480,8 @@ require('lazy').setup({
           --  For example, in C this would take you to the header.
           map('grD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
+          -- Format code
+          map('grf', vim.lsp.buf.format, '[F]ormat Code')
           -- The following two autocommands are used to highlight references of the
           -- word under your cursor when your cursor rests there for a little while.
           --    See `:help CursorHold` for information about when this is executed
