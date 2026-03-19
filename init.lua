@@ -359,7 +359,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sp', fzf.builtin, { desc = '[S]earch [P]ickers (fzf-lua builtins)' })
       vim.keymap.set('n', '<leader>sw', fzf.grep_cword, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('v', '<leader>sw', fzf.grep_visual, { desc = '[S]earch current [W]ord' })
-      vim.keymap.set('n', '<leader>sg', fzf.live_grep, { desc = '[S]earch by [G]rep' })
+      vim.keymap.set('n', '<leader>sg', function() fzf.live_grep { rg_glob = true } end, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', fzf.diagnostics_workspace, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', fzf.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', fzf.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
@@ -391,6 +391,7 @@ require('lazy').setup({
 
       -- Live grep in open files
       vim.keymap.set('n', '<leader>s/', function() fzf.live_grep { grep_open_files = true } end, { desc = '[S]earch [/] in Open Files' })
+      vim.keymap.set('n', '<leader>sb', fzf.lgrep_curbuf, { desc = '[S]earch current [B]uffer' })
 
       -- Search Neovim configuration files
       vim.keymap.set('n', '<leader>sn', function() fzf.files { cwd = vim.fn.stdpath 'config' } end, { desc = '[S]earch [N]eovim files' })
