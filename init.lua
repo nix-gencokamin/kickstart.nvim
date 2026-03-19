@@ -337,6 +337,16 @@ require('lazy').setup({
         fzf_opts = {
           ['--layout'] = 'reverse',
         },
+        grep = {
+          fzf_opts = {
+            ['--preview-label-pos'] = '0:bottom',
+          },
+          keymap = {
+            fzf = {
+              ['focus'] = 'transform-preview-label:echo {1}',
+            },
+          },
+        },
         keymap = {
           fzf = {
             ['alt-p'] = 'toggle-preview',

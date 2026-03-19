@@ -44,11 +44,12 @@ return {
     words = { enabled = true },
   },
   keys = {
-{ '<leader>gB', function() Snacks.gitbrowse() end, desc = '[G]it [B]rowse (open in browser)' },
+    { '<leader>gB', function() Snacks.gitbrowse() end, desc = '[G]it [B]rowse (open in browser)' },
     { '<leader>tz', function() Snacks.zen() end, desc = '[T]oggle [Z]en mode' },
     { '<leader>td', function() Snacks.dim() end, desc = '[T]oggle [D]im' },
-    { '<leader>nh', function() Snacks.notifier.show_history() end, desc = '[N]otification [H]istory' },
+    -- { '<leader>nh', function() Snacks.notifier.show_history() end, desc = '[N]otification [H]istory' },
     { ']]', function() Snacks.words.jump(1, true) end, desc = 'Next LSP reference', mode = { 'n', 't' } },
     { '[[', function() Snacks.words.jump(-1, true) end, desc = 'Prev LSP reference', mode = { 'n', 't' } },
   },
 }
+
