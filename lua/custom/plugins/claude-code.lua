@@ -9,6 +9,9 @@ return {
         snacks_win_opts = {
           position = 'right',
           width = 0.30,
+          keys = {
+            claude_hide = { '<C-x>', function(self) self:hide() end, mode = 't', desc = 'Hide Claude terminal' },
+          },
         },
       },
       diff_opts = {
