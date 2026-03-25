@@ -1,5 +1,5 @@
 return {
-  'JoosepAlvworst/nvim-ts-context-commentstring',
+  'JoosepAlviste/nvim-ts-context-commentstring',
   opts = { enable_autocmd = false },
   init = function()
     local get_option = vim.filetype.get_option
