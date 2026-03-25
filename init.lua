@@ -396,6 +396,9 @@ require('lazy').setup({
       -- Search Neovim configuration files
       vim.keymap.set('n', '<leader>sn', function() fzf.files { cwd = vim.fn.stdpath 'config' } end, { desc = '[S]earch [N]eovim files' })
 
+      -- Search project repos
+      vim.keymap.set('n', '<leader>sP', function() fzf.files { cwd = '~/Documents/Github/a3' } end, { desc = '[S]earch [P]roject files' })
+
       -- Set filetype
       vim.keymap.set('n', '<leader>ft', function()
         local filetypes = { 'bash', 'java', 'javascript', 'json', 'lua', 'markdown', 'python', 'ruby', 'sql', 'typescript', 'typescriptreact', 'yaml' }
@@ -702,12 +705,12 @@ require('lazy').setup({
           -- `friendly-snippets` contains a variety of premade snippets.
           --    See the README about individual language/framework/plugin snippets:
           --    https://github.com/rafamadriz/friendly-snippets
-          -- {
-          --   'rafamadriz/friendly-snippets',
-          --   config = function()
-          --     require('luasnip.loaders.from_vscode').lazy_load()
-          --   end,
-          -- },
+          {
+            'rafamadriz/friendly-snippets',
+            config = function()
+              require('luasnip.loaders.from_vscode').lazy_load()
+            end,
+          },
         },
         opts = {},
       },
