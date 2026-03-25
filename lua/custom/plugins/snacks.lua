@@ -44,7 +44,7 @@ return {
     words = { enabled = true },
   },
   keys = {
-    { '<leader>gB', function() Snacks.gitbrowse() end, desc = '[G]it [B]rowse (open in browser)' },
+    { '<leader>go', function() Snacks.gitbrowse() end, desc = '[G]it [O]pen in browser' },
     { '<leader>tz', function() Snacks.zen() end, desc = '[T]oggle [Z]en mode' },
     { '<leader>td', function() Snacks.dim() end, desc = '[T]oggle [D]im' },
     -- { '<leader>nh', function() Snacks.notifier.show_history() end, desc = '[N]otification [H]istory' },
