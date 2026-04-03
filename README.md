@@ -128,6 +128,57 @@ examples of adding popularly requested plugins.
 
 [The Only Video You Need to Get Started with Neovim](https://youtu.be/m8C0Cq9Uv9o)
 
+### Additional Setup
+
+This fork includes custom plugins and LSP configurations beyond the base kickstart.
+
+#### Extra System Dependencies
+
+```bash
+brew install universal-ctags watchman fzf
+```
+
+- `universal-ctags` — class/module go-to-definition via vim-gutentags
+- `watchman` — file watching for Sorbet LSP
+- `fzf` — fuzzy finder backend for fzf-lua
+
+A [Nerd Font](https://www.nerdfonts.com/) is expected (`vim.g.have_nerd_font = true`). Install one and set it in your terminal.
+
+Node.js is required for Mason-managed tools (typescript-language-server, prettierd, eslint_d, etc.):
+
+```bash
+# Homebrew
+brew install node
+
+# asdf
+asdf plugin add nodejs && asdf install nodejs latest && asdf set nodejs latest --home
+
+# mise
+mise use node@latest
+
+# nvm
+nvm install --lts
+```
+
+#### Hardcoded Paths
+
+Several paths in `init.lua` are user-specific and must be updated. Search for `/Users/` to find them:
+
+- **ruby-lsp / sorbet cmd** — path to your Ruby LSP environment
+- **`<leader>sP` project search** — your project directory
+
+#### Ruby LSP + Sorbet
+
+This config runs ruby-lsp and Sorbet side by side from a shared bundle environment outside the project. See [docs/ruby-lsp-setup.md](docs/ruby-lsp-setup.md) for full setup instructions.
+
+#### Obsidian
+
+The obsidian.nvim plugin (`lua/custom/plugins/obsidian.lua`) expects vault directories at `~/Documents/Vault` and `~/Documents/Obsidian AI`. Update the `vaults` table to match your setup, or remove the plugin.
+
+#### Minuet AI
+
+AI completions via minuet-ai read the `ANTHROPIC_AUTH_TOKEN` environment variable. Set it in your shell profile if desired.
+
 ### FAQ
 
 * What should I do if I already have a pre-existing Neovim configuration?
