@@ -401,6 +401,27 @@ require('lazy').setup({
                 while s > 1 and line:sub(s - 1, s - 1):match('[%w_:]') do s = s - 1 end
                 while e < #line and line:sub(e + 1, e + 1):match('[%w_:]') do e = e + 1 end
                 local symbol = line:sub(s, e):gsub('^:+', '')
+
+                -- If no :: in symbol, try to qualify it from enclosing module/class nesting
+                if not symbol:find('::') then
+                  local nesting = {}
+                  local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
+                  for i = 1, cursor_line - 1 do
+                    local l = vim.api.nvim_buf_get_lines(0, i - 1, i, false)[1] or ''
+                    local names = l:match('^%s*module%s+([%w_:]+)') or l:match('^%s*class%s+([%w_:]+)')
+                    if names then
+                      -- Split on :: to handle "module Avant::Event" style
+                      for part in names:gmatch('[%w_]+') do
+                        table.insert(nesting, part)
+                      end
+                    end
+                  end
+                  if #nesting > 0 then
+                    table.insert(nesting, symbol)
+                    symbol = table.concat(nesting, '::')
+                  end
+                end
+
                 fzf.grep({ search = symbol })
               end
             end)
