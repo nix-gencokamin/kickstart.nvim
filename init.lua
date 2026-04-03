@@ -388,9 +388,37 @@ require('lazy').setup({
         group = vim.api.nvim_create_augroup('fzf-lua-lsp-attach', { clear = true }),
         callback = function(event)
           local buf = event.buf
-          vim.keymap.set('n', 'grr', fzf.lsp_references, { buffer = buf, desc = '[G]oto [R]eferences' })
+          vim.keymap.set('n', 'grr', function()
+            local params = vim.lsp.util.make_position_params()
+            vim.lsp.buf_request(0, 'textDocument/references', params, function(err, result)
+              if result and not vim.tbl_isempty(result) then
+                fzf.lsp_references()
+              else
+                -- Grab the full qualified name (e.g. Avant::Event::Alert::Channel) under/around cursor
+                local line = vim.api.nvim_get_current_line()
+                local col = vim.api.nvim_win_get_cursor(0)[2] + 1
+                local s, e = col, col
+                while s > 1 and line:sub(s - 1, s - 1):match('[%w_:]') do s = s - 1 end
+                while e < #line and line:sub(e + 1, e + 1):match('[%w_:]') do e = e + 1 end
+                local symbol = line:sub(s, e):gsub('^:+', '')
+                fzf.grep({ search = symbol })
+              end
+            end)
+          end, { buffer = buf, desc = '[G]oto [R]eferences (LSP + grep fallback)' })
           vim.keymap.set('n', 'gri', fzf.lsp_implementations, { buffer = buf, desc = '[G]oto [I]mplementation' })
-          vim.keymap.set('n', 'grd', fzf.lsp_definitions, { buffer = buf, desc = '[G]oto [D]efinition' })
+          vim.keymap.set('n', 'grd', function()
+            local params = vim.lsp.util.make_position_params()
+            vim.lsp.buf_request(0, 'textDocument/definition', params, function(err, result)
+              if result and not vim.tbl_isempty(result) then
+                fzf.lsp_definitions()
+              else
+                vim.schedule(function()
+                  local ok, _ = pcall(vim.cmd, 'tag ' .. vim.fn.expand('<cword>'))
+                  if not ok then vim.notify('No definition found', vim.log.levels.WARN) end
+                end)
+              end
+            end)
+          end, { buffer = buf, desc = '[G]oto [D]efinition (LSP + ctags fallback)' })
           vim.keymap.set('n', 'gO', fzf.lsp_document_symbols, { buffer = buf, desc = 'Open Document Symbols' })
           vim.keymap.set('n', 'gW', fzf.lsp_live_workspace_symbols, { buffer = buf, desc = 'Open Workspace Symbols' })
           vim.keymap.set('n', 'grt', fzf.lsp_typedefs, { buffer = buf, desc = '[G]oto [T]ype Definition' })
@@ -558,7 +586,15 @@ require('lazy').setup({
           cmd = {
             'bash',
             '-c',
-            'cd /Users/ngk86v/Documents/Github/avant-basic/.vscode/ruby-lsp-env && bundle exec ruby-lsp',
+            'cd /Users/ngk86v/Documents/Github/avant-basic/.vscode/ruby-lsp-env && RUBOCOP_OPTS="--config /Users/ngk86v/Documents/Github/avant-basic/.vscode/ruby-lsp-env/.rubocop.yml" bundle exec ruby-lsp',
+          },
+          root_dir = function(fname) return vim.fn.getcwd() end,
+        },
+        sorbet = {
+          cmd = {
+            'bash',
+            '-c',
+            'cd /Users/ngk86v/Documents/Github/avant-basic/.vscode/ruby-lsp-env && bundle exec srb tc --typed true --lsp',
           },
           root_dir = function(fname) return vim.fn.getcwd() end,
         },
@@ -584,7 +620,7 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       -- Remove ruby_lsp since we're using a custom installation
       -- Filter servers whose Mason package names differ from lspconfig names
-      local mason_name_overrides = { ruby_lsp = true, jsonls = true, ts_ls = true, yamlls = true }
+      local mason_name_overrides = { ruby_lsp = true, sorbet = true, jsonls = true, ts_ls = true, yamlls = true }
       ensure_installed = vim.tbl_filter(function(name) return not mason_name_overrides[name] end, ensure_installed)
 
       vim.list_extend(ensure_installed, {
@@ -601,21 +637,48 @@ require('lazy').setup({
 
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
-      -- Handle ruby_lsp separately with autostart
+      -- Handle ruby_lsp and sorbet separately with autostart
       local ruby_lsp_config = servers.ruby_lsp
+      local sorbet_config = servers.sorbet
       if ruby_lsp_config then
         servers.ruby_lsp = nil -- Remove from servers table
+      end
+      if sorbet_config then
+        servers.sorbet = nil -- Remove from servers table
+      end
+      if ruby_lsp_config or sorbet_config then
         vim.api.nvim_create_autocmd('FileType', {
           pattern = 'ruby',
           callback = function()
-            vim.lsp.start {
-              name = 'ruby_lsp',
-              cmd = ruby_lsp_config.cmd,
-              root_dir = vim.fn.getcwd(),
-              capabilities = vim.tbl_deep_extend('force', {}, capabilities, ruby_lsp_config.capabilities or {}),
-            }
+            if ruby_lsp_config then
+              vim.lsp.start {
+                name = 'ruby_lsp',
+                cmd = ruby_lsp_config.cmd,
+                root_dir = vim.fn.getcwd(),
+                capabilities = vim.tbl_deep_extend('force', {}, capabilities, ruby_lsp_config.capabilities or {}),
+              }
+            end
+            if sorbet_config then
+              vim.lsp.start {
+                name = 'sorbet',
+                cmd = sorbet_config.cmd,
+                root_dir = vim.fn.getcwd(),
+                capabilities = vim.tbl_deep_extend('force', {}, capabilities, sorbet_config.capabilities or {}),
+              }
+            end
           end,
         })
+      end
+
+      -- Suppress Sorbet diagnostics (false positives without RBI stubs)
+      vim.lsp.handlers['textDocument/publishDiagnostics'] = function(err, result, ctx, config)
+        if result and vim.lsp.get_client_by_id(ctx.client_id) then
+          local client = vim.lsp.get_client_by_id(ctx.client_id)
+          if client and client.name == 'sorbet' then
+            result.diagnostics = {}
+          end
+        end
+        vim.lsp.diagnostic.on_publish_diagnostics(err, result, ctx, config)
       end
 
       for name, server in pairs(servers) do
