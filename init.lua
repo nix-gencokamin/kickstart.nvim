@@ -729,16 +729,16 @@ require('lazy').setup({
       },
       {
         '<leader>la',
-        function()
-          local line = vim.fn.line '.'
-          vim.cmd('!rubocop -A --stderr -f quiet --range ' .. line .. ',' .. line .. ' %')
-        end,
+        vim.lsp.buf.code_action,
         ft = 'ruby',
-        desc = 'Rubocop [A]utocorrect line',
+        desc = 'Rubocop [A]utocorrect (code action)',
       },
       {
         '<leader>lA',
-        function() vim.cmd '!rubocop -A --stderr -f quiet %' end,
+        function()
+          local file = vim.fn.expand '%:p'
+          vim.cmd('!cd /Users/ngk86v/Documents/Github/avant-basic/.vscode/ruby-lsp-env && bundle exec rubocop -A --config .rubocop.yml --stderr -f quiet ' .. vim.fn.shellescape(file))
+        end,
         ft = 'ruby',
         desc = 'Rubocop [A]utocorrect file',
       },
