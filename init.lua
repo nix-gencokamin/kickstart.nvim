@@ -727,6 +727,21 @@ require('lazy').setup({
         mode = '',
         desc = '[F]ormat buffer',
       },
+      {
+        '<leader>la',
+        function()
+          local line = vim.fn.line '.'
+          vim.cmd('!rubocop -A --stderr -f quiet --range ' .. line .. ',' .. line .. ' %')
+        end,
+        ft = 'ruby',
+        desc = 'Rubocop [A]utocorrect line',
+      },
+      {
+        '<leader>lA',
+        function() vim.cmd '!rubocop -A --stderr -f quiet %' end,
+        ft = 'ruby',
+        desc = 'Rubocop [A]utocorrect file',
+      },
     },
     opts = {
       notify_on_error = false,
