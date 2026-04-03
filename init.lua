@@ -850,19 +850,7 @@ require('lazy').setup({
         -- <c-k>: Toggle signature help
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
-        preset = 'default',
-
-        -- Accept minuet ghost text with Tab; fall back to snippet navigation if no suggestion visible
-        ['<Tab>'] = {
-          function()
-            if require('minuet.virtualtext').action.is_visible() then
-              require('minuet.virtualtext').action.accept()
-              return true
-            end
-          end,
-          'snippet_forward',
-          'fallback',
-        },
+        preset = 'super-tab',
 
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
