@@ -32,6 +32,9 @@ return {
             width = 0.8,
             height = 0.8,
             border = 'rounded',
+            keys = {
+              claude_hide = { '<C-x>', function(self) self:hide() end, mode = 't', desc = 'Hide Claude terminal' },
+            },
           },
         }
       end,

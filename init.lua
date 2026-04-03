@@ -174,6 +174,16 @@ vim.o.autoread = true
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
+-- Delete/change to black hole register (no clipboard copy)
+-- cc still cuts (yanks line then changes)
+vim.keymap.set({ 'n', 'v' }, 'd', '"_d')
+vim.keymap.set('n', 'dd', '"_dd')
+vim.keymap.set({ 'n', 'v' }, 'x', '"_x')
+vim.keymap.set({ 'n', 'v' }, 'c', '"_c')
+vim.keymap.set('n', 'cc', function()
+  vim.cmd 'normal! yy"_cc'
+end)
+
 -- Diagnostic Config & Keymaps
 -- See :help vim.diagnostic.Opts
 vim.diagnostic.config {
