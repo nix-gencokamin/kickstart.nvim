@@ -52,4 +52,3 @@ return {
     { '[[', function() Snacks.words.jump(-1, true) end, desc = 'Prev LSP reference', mode = { 'n', 't' } },
   },
 }
-
