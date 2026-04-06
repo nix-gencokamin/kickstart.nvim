@@ -92,6 +92,7 @@ vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
+vim.g.autoformat_enabled = true
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
@@ -180,9 +181,7 @@ vim.keymap.set({ 'n', 'v' }, 'd', '"_d')
 vim.keymap.set('n', 'dd', '"_dd')
 vim.keymap.set({ 'n', 'v' }, 'x', '"_x')
 vim.keymap.set({ 'n', 'v' }, 'c', '"_c')
-vim.keymap.set('n', 'cc', function()
-  vim.cmd 'normal! yy"_cc'
-end)
+vim.keymap.set('n', 'cc', function() vim.cmd 'normal! yy"_cc' end)
 
 -- Diagnostic Config & Keymaps
 -- See :help vim.diagnostic.Opts
@@ -398,20 +397,24 @@ require('lazy').setup({
                 local line = vim.api.nvim_get_current_line()
                 local col = vim.api.nvim_win_get_cursor(0)[2] + 1
                 local s, e = col, col
-                while s > 1 and line:sub(s - 1, s - 1):match('[%w_:]') do s = s - 1 end
-                while e < #line and line:sub(e + 1, e + 1):match('[%w_:]') do e = e + 1 end
+                while s > 1 and line:sub(s - 1, s - 1):match '[%w_:]' do
+                  s = s - 1
+                end
+                while e < #line and line:sub(e + 1, e + 1):match '[%w_:]' do
+                  e = e + 1
+                end
                 local symbol = line:sub(s, e):gsub('^:+', '')
 
                 -- If no :: in symbol, try to qualify it from enclosing module/class nesting
-                if not symbol:find('::') then
+                if not symbol:find '::' then
                   local nesting = {}
                   local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
                   for i = 1, cursor_line - 1 do
                     local l = vim.api.nvim_buf_get_lines(0, i - 1, i, false)[1] or ''
-                    local names = l:match('^%s*module%s+([%w_:]+)') or l:match('^%s*class%s+([%w_:]+)')
+                    local names = l:match '^%s*module%s+([%w_:]+)' or l:match '^%s*class%s+([%w_:]+)'
                     if names then
                       -- Split on :: to handle "module Avant::Event" style
-                      for part in names:gmatch('[%w_]+') do
+                      for part in names:gmatch '[%w_]+' do
                         table.insert(nesting, part)
                       end
                     end
@@ -422,7 +425,7 @@ require('lazy').setup({
                   end
                 end
 
-                fzf.grep({ search = symbol })
+                fzf.grep { search = symbol }
               end
             end)
           end, { buffer = buf, desc = '[G]oto [R]eferences (LSP + grep fallback)' })
@@ -434,7 +437,7 @@ require('lazy').setup({
                 fzf.lsp_definitions()
               else
                 vim.schedule(function()
-                  local ok, _ = pcall(vim.cmd, 'tag ' .. vim.fn.expand('<cword>'))
+                  local ok, _ = pcall(vim.cmd, 'tag ' .. vim.fn.expand '<cword>')
                   if not ok then vim.notify('No definition found', vim.log.levels.WARN) end
                 end)
               end
@@ -695,9 +698,7 @@ require('lazy').setup({
       vim.lsp.handlers['textDocument/publishDiagnostics'] = function(err, result, ctx, config)
         if result and vim.lsp.get_client_by_id(ctx.client_id) then
           local client = vim.lsp.get_client_by_id(ctx.client_id)
-          if client and client.name == 'sorbet' then
-            result.diagnostics = {}
-          end
+          if client and client.name == 'sorbet' then result.diagnostics = {} end
         end
         vim.lsp.diagnostic.on_publish_diagnostics(err, result, ctx, config)
       end
@@ -758,15 +759,32 @@ require('lazy').setup({
         '<leader>lA',
         function()
           local file = vim.fn.expand '%:p'
-          vim.cmd('!cd /Users/ngk86v/Documents/Github/avant-basic/.vscode/ruby-lsp-env && bundle exec rubocop -A --config .rubocop.yml --stderr -f quiet ' .. vim.fn.shellescape(file))
+          vim.cmd(
+            '!cd /Users/ngk86v/Documents/Github/avant-basic/.vscode/ruby-lsp-env && bundle exec rubocop -A --config .rubocop.yml --stderr -f quiet '
+              .. vim.fn.shellescape(file)
+          )
         end,
         ft = 'ruby',
         desc = 'Rubocop [A]utocorrect file',
+      },
+      {
+        '<leader>lt',
+        function()
+          vim.g.autoformat_enabled = not vim.g.autoformat_enabled
+          vim.notify('Autoformat ' .. (vim.g.autoformat_enabled and 'enabled' or 'disabled'))
+        end,
+        desc = '[T]oggle autoformat',
+      },
+      {
+        '<leader>lw',
+        '<cmd>noautocmd write<cr>',
+        desc = '[W]rite without format',
       },
     },
     opts = {
       notify_on_error = false,
       format_on_save = function(bufnr)
+        if not vim.g.autoformat_enabled then return nil end
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
@@ -817,9 +835,7 @@ require('lazy').setup({
           --    https://github.com/rafamadriz/friendly-snippets
           {
             'rafamadriz/friendly-snippets',
-            config = function()
-              require('luasnip.loaders.from_vscode').lazy_load()
-            end,
+            config = function() require('luasnip.loaders.from_vscode').lazy_load() end,
           },
         },
         opts = {},
@@ -944,6 +960,13 @@ require('lazy').setup({
       -- cursor location to LINE:COLUMN
       ---@diagnostic disable-next-line: duplicate-set-field
       statusline.section_location = function() return '%2l:%-2v' end
+
+      ---@diagnostic disable-next-line: duplicate-set-field
+      local orig_fileinfo = statusline.section_fileinfo
+      statusline.section_fileinfo = function(args)
+        local info = orig_fileinfo(args)
+        return info .. ' ' .. (vim.g.autoformat_enabled and '󰷬' or '󰷪')
+      end
 
       -- ... and there is more!
       --  Check out: https://github.com/nvim-mini/mini.nvim

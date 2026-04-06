@@ -22,9 +22,7 @@ return {
     {
       'gz',
       function()
-        if auto_configure_slime() then
-          return '<Plug>SlimeMotionSend'
-        end
+        if auto_configure_slime() then return '<Plug>SlimeMotionSend' end
       end,
       expr = true,
       desc = 'Send motion to terminal',
@@ -32,18 +30,14 @@ return {
     {
       'gzz',
       function()
-        if auto_configure_slime() then
-          vim.cmd('SlimeSendCurrentLine')
-        end
+        if auto_configure_slime() then vim.cmd 'SlimeSendCurrentLine' end
       end,
       desc = 'Send line to terminal',
     },
     {
       'gz',
       function()
-        if auto_configure_slime() then
-          vim.cmd("'<,'>SlimeSend")
-        end
+        if auto_configure_slime() then vim.cmd "'<,'>SlimeSend" end
       end,
       mode = 'x',
       desc = 'Send selection to terminal',
