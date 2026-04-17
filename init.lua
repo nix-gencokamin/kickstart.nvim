@@ -87,6 +87,11 @@ P.S. You can delete this when you're done too. It's your config now! :)
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
+-- Disable netrw to prevent it from intercepting https:// URIs (e.g. sorbet stdlib definitions)
+-- and running :!wget, which causes cmdline noise and crashes.
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
@@ -702,6 +707,14 @@ require('lazy').setup({
           if client and client.name == 'sorbet' then result.diagnostics = {} end
         end
         vim.lsp.diagnostic.on_publish_diagnostics(err, result, ctx, config)
+      end
+
+      -- Route LSP window/showMessage through vim.notify so snacks displays them top-right
+      -- instead of printing to the cmdline (avoids sorbet wget noise at the bottom)
+      vim.lsp.handlers['window/showMessage'] = function(_, result, ctx)
+        local client = vim.lsp.get_client_by_id(ctx.client_id)
+        local lvl = ({ 'ERROR', 'WARN', 'INFO', 'DEBUG' })[result.type]
+        vim.notify(result.message, vim.log.levels[lvl] or vim.log.levels.INFO, { title = client and client.name or 'LSP' })
       end
 
       for name, server in pairs(servers) do
