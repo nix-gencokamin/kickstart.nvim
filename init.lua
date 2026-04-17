@@ -405,8 +405,9 @@ require('lazy').setup({
                 end
                 local symbol = line:sub(s, e):gsub('^:+', '')
 
-                -- If no :: in symbol, try to qualify it from enclosing module/class nesting
-                if not symbol:find '::' then
+                -- Only qualify with enclosing module/class nesting for constants (uppercase).
+                -- Method names (lowercase) must not be qualified — they don't exist as Foo::Bar::method.
+                if not symbol:find '::' and symbol:match '^%u' then
                   local nesting = {}
                   local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
                   for i = 1, cursor_line - 1 do
@@ -966,6 +967,20 @@ require('lazy').setup({
       statusline.section_fileinfo = function(args)
         local info = orig_fileinfo(args)
         return info .. ' ' .. (vim.g.autoformat_enabled and '󰷬' or '󰷪')
+      end
+
+      -- Show Claude context bar in statusline when a session is active
+      ---@diagnostic disable-next-line: duplicate-set-field
+      local orig_active = statusline.active
+      statusline.active = function()
+        local ctx = vim.g.claude_ctx_line
+        if ctx and ctx ~= '' then
+          local pct = tonumber(ctx:match '(%d+)%%') or 0
+          local hl = pct >= 78 and 'DiagnosticError' or pct >= 60 and 'DiagnosticWarn' or 'DiagnosticOk'
+          local escaped = ctx:gsub('%%', '%%%%')
+          return '%#' .. hl .. '#  ' .. escaped .. '  %*' .. orig_active()
+        end
+        return orig_active()
       end
 
       -- ... and there is more!
